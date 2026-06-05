@@ -4,31 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebCore Docs</title>
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
-<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+<div class="docs-shell">
+<header class="site-header"><div class="header-inner"><a class="logo" href="/" onclick="webcore_navigate('/'); return false;"><span class="logo-mark">▸
 </span>
 <span class="logo-text">WebCore
 </span>
-<span class="logo-version">v1.1
+<span class="logo-version">v1.1.1
 </span>
-</div>
-<nav class="site-nav"><a href="/">Home
 </a>
-<a href="/syntax">Syntax
+<nav class="site-nav"><a href="/" onclick="webcore_navigate('/'); return false;">Home
 </a>
-<a href="/components">Components
+<a href="/syntax" onclick="webcore_navigate('/syntax'); return false;">Syntax
 </a>
-<a href="/features">Features
+<a href="/components" onclick="webcore_navigate('/components'); return false;">Components
+</a>
+<a href="/features" onclick="webcore_navigate('/features'); return false;">Features
+</a>
+<a href="/examples" onclick="webcore_navigate('/examples'); return false;">Examples
 </a>
 </nav>
 </div>
 </header>
 <main class="site-main"><div class="page-header"><h1>Features
 </h1>
-<p class="page-sub">Store · Validation · SSG · i18n · WASM · Tree-shaking · Routes
+<p class="page-sub">Store · Validation · SSG · i18n · WASM · Tree-shaking
 </p>
 </div>
 <section class="doc-section"><h2>Global store
@@ -36,7 +39,7 @@
 <p>The 
 <code>store { \}
 </code>
- block declares reactive state shared across all components.
+ block declares reactive state shared across all components and pages.
 </p>
 <pre class="code-block">// app.webc
 store {
@@ -45,7 +48,7 @@ store {
     active: Boolean = false
 \}
 
-// Any component -- prefix with $store.
+// Any component — prefix with $store.
 component Display {
     view {
         p &quot;Global count: {$store.count\}&quot;
@@ -63,6 +66,19 @@ component Badge {
     \}
 \}
 </pre>
+<div class="callout-tip"><strong>Scoped reactivity: 
+</strong>
+Store vars use the same 
+<code>S.set() / S.get()
+</code>
+ machinery as component state. Any binding that reads 
+<code>$store.x
+</code>
+ automatically re-renders when 
+<code>$store.x
+</code>
+ changes — no subscription boilerplate.
+</div>
 </section>
 <section class="doc-section"><h2>Form validation
 </h2>
@@ -90,10 +106,16 @@ component Badge {
     \}
 \}
 </pre>
-<p>Validation fires on blur and submit. 
+<p>Validation fires on 
+<code>blur
+</code>
+ and 
+<code>submit
+</code>
+. 
 <code>@error
 </code>
- blocks are hidden by default; shown on failure.
+ blocks are hidden by default; shown when the corresponding field fails.
 </p>
 <div class="table-wrap"><table><thead><tr><th>Attribute
 </th>
@@ -146,13 +168,24 @@ component Badge {
 </tbody>
 </table>
 </div>
+<div class="callout">Validation logic uses the browser&#x27;s native 
+<code>input.checkValidity()
+</code>
+ capture phase, so no custom regex engine is shipped. The 
+<code>validateField()
+</code>
+ helper is tree-shaken out if no 
+<code>validate:*
+</code>
+ attributes appear in the document.
+</div>
 </section>
 <section class="doc-section"><h2>Static Site Generation (SSG)
 </h2>
 <p>The compiler pre-renders initial state into HTML at build time. 
 No flash of unstyled or wrong content on first paint.
 </p>
-<pre class="code-block">// .webc source -- state: count = 0
+<pre class="code-block">// .webc source — state: count = 0
 p &quot;Counter: {count\}&quot;
 @if count &gt; 0 { p &quot;Positive&quot; \} @else { p &quot;Zero&quot; \}
 
@@ -161,16 +194,26 @@ p &quot;Counter: {count\}&quot;
 &lt;div data-webcore-if=&quot;count &gt; 0&quot; style=&quot;display:none&quot;&gt;...&lt;/div&gt;
 &lt;div data-webcore-else=&quot;count &gt; 0&quot; style=&quot;display:block&quot;&gt;...&lt;/div&gt;
 </pre>
+<div class="callout-tip"><strong>Zero JS on first paint: 
+</strong>
+The server sends fully populated HTML. The runtime attaches to existing DOM nodes via 
+<code>data-webcore-*
+</code>
+ attributes rather than replacing them, so the initial render is instant and crawlable.
+</div>
 </section>
 <section class="doc-section"><h2>Internationalisation (i18n)
 </h2>
-<p>Place .toml files in 
+<p>Place 
+<code>.toml
+</code>
+ files in 
 <code>locales/
 </code>
 . Use 
 <code>t(&quot;key&quot;)
 </code>
- in views. Switch with 
+ in views. Switch locale at runtime with 
 <code>setLocale(code)
 </code>
 .
@@ -190,7 +233,9 @@ button on:click={setLocale(&quot;fr&quot;)\} { &quot;FR&quot; \}
 button on:click={setLocale(&quot;en&quot;)\} { &quot;EN&quot; \}
 </pre>
 </section>
-<section class="doc-section"><h2>i18n: parameters and pluralization (v1.1.0)
+<section class="doc-section"><h2>i18n: parameters and pluralization 
+<span class="version-tag">v1.1.0
+</span>
 </h2>
 <p>Pass a second argument to 
 <code>t()
@@ -207,11 +252,6 @@ items_other = &quot;
 greeting    = &quot;Hello, 
 <span data-webcore-interpolation="{0"></span>
 }!&quot;
-score       = &quot;Your score: 
-<span data-webcore-interpolation="{0"></span>
-} / 
-<span data-webcore-interpolation="{1"></span>
-}&quot;
 
 // locales/fr.toml
 items_one   = &quot;
@@ -224,12 +264,12 @@ greeting    = &quot;Bonjour,
 <span data-webcore-interpolation="{0"></span>
 } !&quot;
 </pre>
-<pre class="code-block">// Pluralization -- uses _one or _other key
-p &quot;{t(&quot;items&quot;, 1)\}&quot;       // &quot;1 item&quot;
-p &quot;{t(&quot;items&quot;, count)\}&quot;   // &quot;3 items&quot; (reactive)
+<pre class="code-block">// Pluralization — picks _one or _other key
+p &quot;{t(&quot;items&quot;, 1)\}&quot;       // → &quot;1 item&quot;
+p &quot;{t(&quot;items&quot;, count)\}&quot;   // → &quot;3 items&quot; (reactive)
 
 // Positional substitution
-p &quot;{t(&quot;greeting&quot;, username)\}&quot;  // &quot;Hello, Alice!&quot;
+p &quot;{t(&quot;greeting&quot;, username)\}&quot;  // → &quot;Hello, Alice!&quot;
 </pre>
 <div class="table-wrap"><table><thead><tr><th>Call
 </th>
@@ -268,7 +308,10 @@ p &quot;{t(&quot;greeting&quot;, username)\}&quot;  // &quot;Hello, Alice!&quot;
 <p>Place a Rust crate in 
 <code>wasm/
 </code>
-. The compiler detects it, runs wasm-pack, and injects an async loader.
+. The compiler detects it, runs 
+<code>wasm-pack
+</code>
+, and injects an async loader — no manual wiring.
 </p>
 <pre class="code-block">// wasm/src/lib.rs
 use wasm_bindgen::prelude::*;
@@ -284,16 +327,27 @@ component WasmDemo {
     \}
 \}
 </pre>
-<p><code>globalThis.wasm
+<div class="callout"><code>globalThis.wasm
 </code>
- is filled asynchronously after load. A full rebind fires on success.
-</p>
+ is populated asynchronously after the module loads. 
+A full 
+<code>bind()
+</code>
+ call fires on success so any interpolation using 
+<code>wasm.*
+</code>
+ reflects the initial state immediately. The WASM loader is tree-shaken out when no 
+<code>wasm/
+</code>
+ directory is present.
+</div>
 </section>
 <section class="doc-section"><h2>Runtime tree-shaking
 </h2>
-<p>The compiler emits only the runtime functions actually used by the document.
+<p>The compiler emits only the runtime functions actually used by the document. 
+Unused helpers are never written to the output bundle.
 </p>
-<pre class="code-block">// Minimal bundle -- no @for, @if, validation, routing, or WASM
+<pre class="code-block">// Minimal bundle — no @for, @if, validation, routing, or WASM
 class State {
   #d=new Map(); #l=new Map();
   set(k,v){ this.#d.set(k,v); this.#l.get(k)?.forEach(f=&gt;f(v)) \}
@@ -302,11 +356,11 @@ class State {
   on(k,f){ (this.#l.get(k)??this.#l.set(k,[]).get(k)).push(f) \}
 \}
 const S = new State();
-// bindIf, bindFor, bindAttrs, nav, validateField -- absent
+// bindIf, bindFor, bindAttrs, nav, validateField — absent
 </pre>
-<div class="feature-table"><table><thead><tr><th>Feature
+<div class="table-wrap"><table><thead><tr><th>Function / constant
 </th>
-<th>Emitted when...
+<th>Emitted when…
 </th>
 </tr>
 </thead>
@@ -316,6 +370,7 @@ const S = new State();
 <td>At least one 
 <code>@for
 </code>
+ loop
 </td>
 </tr>
 <tr><td><code>bindIf()
@@ -323,6 +378,9 @@ const S = new State();
 </td>
 <td>At least one 
 <code>@if
+</code>
+ / 
+<code>@else
 </code>
 </td>
 </tr>
@@ -332,6 +390,7 @@ const S = new State();
 <td>At least one 
 <code>attr={expr\}
 </code>
+ dynamic attribute
 </td>
 </tr>
 <tr><td><code>validateField()
@@ -360,6 +419,7 @@ const S = new State();
 <td>At least one 
 <code>on:destroy {\}
 </code>
+ block
 </td>
 </tr>
 <tr><td><code>COMPUTED + rebindComputed()
@@ -368,27 +428,45 @@ const S = new State();
 <td>At least one 
 <code>computed {\}
 </code>
+ block
 </td>
 </tr>
 <tr><td>WASM loader
 </td>
 <td><code>wasm/Cargo.toml
 </code>
- exists
+ present at build time
 </td>
 </tr>
 </tbody>
 </table>
+</div>
+<div class="callout-tip"><strong>How it works: 
+</strong>
+<code>detect_features()
+</code>
+ in 
+<code>codegen_js.rs
+</code>
+ walks the AST once before code generation and sets boolean flags per feature. Each emitter checks its flag before writing — unused helpers are never serialised to the output file.
 </div>
 </section>
 </main>
 <footer class="site-footer"><p>Built with 
 <strong>WebCore
 </strong>
- — a declarative language compiled with Rust.
+ · 
+<a href="https://github.com/PrinMeshia/Webcore">GitHub
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/releases">Releases
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/blob/main/CHANGELOG.md">Changelog
+</a>
 </p>
 </footer>
 </div>
-  <script src="webcore.js?v=1407e1df"></script>
+  <script src="assets/webcore.js?v=fd9fde34"></script>
 </body>
 </html>

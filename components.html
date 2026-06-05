@@ -4,92 +4,91 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebCore Docs</title>
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
-<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+<div class="docs-shell">
+<header class="site-header"><div class="header-inner"><a class="logo" href="/" onclick="webcore_navigate('/'); return false;"><span class="logo-mark">▸
 </span>
 <span class="logo-text">WebCore
 </span>
-<span class="logo-version">v1.1
+<span class="logo-version">v1.1.1
 </span>
-</div>
-<nav class="site-nav"><a href="/">Home
 </a>
-<a href="/syntax">Syntax
+<nav class="site-nav"><a href="/" onclick="webcore_navigate('/'); return false;">Home
 </a>
-<a href="/components">Components
+<a href="/syntax" onclick="webcore_navigate('/syntax'); return false;">Syntax
 </a>
-<a href="/features">Features
+<a href="/components" onclick="webcore_navigate('/components'); return false;">Components
+</a>
+<a href="/features" onclick="webcore_navigate('/features'); return false;">Features
+</a>
+<a href="/examples" onclick="webcore_navigate('/examples'); return false;">Examples
 </a>
 </nav>
 </div>
 </header>
 <main class="site-main"><div class="page-header"><h1>Component Model
 </h1>
-<p class="page-sub">Props · State · Computed · Lifecycle · Events · Routes
+<p class="page-sub">Props · State · Computed · Lifecycle · Inter-component events · Scoped CSS
 </p>
 </div>
 <section class="doc-section"><h2>Anatomy of a component
 </h2>
+<p>Every block is optional except 
+<code>view
+</code>
+ — the HTML tree is required.
+</p>
 <pre class="code-block">component MyComponent {
-    props    { ... \}      // pass-in values
+    props    { ... \}      // pass-in values (static or reactive)
     state    { ... \}      // local reactive state
-    computed { ... \}      // derived values
+    computed { ... \}      // derived values, re-evaluated before each bind
     on:mount   { ... \}    // runs at DOMContentLoaded
-    on:destroy { ... \}    // runs before navigation / unload
-    view     { ... \}      // required -- the HTML tree
-    style    { ... \}      // scoped CSS
+    on:destroy { ... \}    // runs before SPA navigation / window.beforeunload
+    view     { ... \}      // required — the HTML tree
+    style    { ... \}      // scoped CSS (FNV-1a data-v hash)
 \}
 </pre>
 </section>
 <section class="doc-section"><h2>Props
 </h2>
-<p>Props are values passed into a component at call site. 
-They accept static strings or dynamic expressions.
+<p>Props are values passed at call site. 
+Static props (
+<code>name=&quot;value&quot;
+</code>
+) are substituted at compile time. Dynamic props (
+<code>name={expr\}
+</code>
+) compile to reactive spans.
 </p>
 <pre class="code-block">component Badge {
     props { label: String, color: String \}
     view  { span class={color\} &quot;Status: {label\}&quot; \}
 \}
 
-// Static props
+// Static props — substituted at compile time
 Badge label=&quot;Active&quot; color=&quot;green&quot; {\}
 
-// Dynamic props -- reactive
+// Dynamic props — reactive at runtime
 Badge label={statusMsg\} color={statusColor\} {\}
 </pre>
-<p>A static prop (
-<code>name=&quot;value&quot;
-</code>
-) is substituted at compile time. 
-A dynamic prop (
-<code>name={expr\}
-</code>
-) compiles to a reactive interpolation span.
-</p>
-<p>Compound expressions using a prop name also work (v1.1.0):
+<p>Compound expressions using a prop name also work:
 </p>
 <pre class="code-block">component StepCounter {
     props { step: Number \}
     view {
-        // {step + 1\} — prop used inside a compound expression
-        p &quot;Next step: {step + 1\}&quot;
-        // class={color\} — prop used as a dynamic attribute
-        span class={color\} &quot;Status&quot;
+        p &quot;Next: {step + 1\}&quot;        // compound expression
+        span class={color\} &quot;Status&quot; // prop as dynamic attribute
     \}
 \}
-
-// Call site
 StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
-// Renders: &quot;Next step: (2) + 1&quot; (evaluated at runtime)
-//          &lt;span class=&quot;green&quot;&gt;
 </pre>
 </section>
 <section class="doc-section"><h2>State
 </h2>
-<p>Local reactive state. Any assignment triggers a DOM update.
+<p>Local reactive state. Any assignment triggers a DOM update for bindings that depend on it.
 </p>
 <pre class="code-block">state {
     count:  Number  = 0
@@ -98,7 +97,7 @@ StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
     items:  List    = []
 \}
 </pre>
-<p>Types: 
+<div class="callout">Types: 
 <code>Number
 </code>
  · 
@@ -110,7 +109,8 @@ StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
  · 
 <code>List
 </code>
-</p>
+. The type annotation determines the SSG pre-render strategy.
+</div>
 </section>
 <section class="doc-section"><h2>Computed — derived state
 </h2>
@@ -126,31 +126,36 @@ StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
     \}
     computed {
         fullName = firstName + &quot; &quot; + lastName
-        initials = firstName + &quot;.&quot; + lastName
+        initials = firstName[0] + &quot;.&quot; + lastName[0]
     \}
     on:mount { firstName = &quot;Marie&quot; \}
     view { p &quot;Hello {fullName\} ({initials\})&quot; \}
 \}
 </pre>
-<p>Computed vars use 
+<div class="callout-tip"><strong>No reactive loops: 
+</strong>
+Computed vars use 
 <code>S.setQ()
 </code>
- (silent setter) — no listener triggers, no reactive loops.
-</p>
+ (silent setter) — state is updated without triggering listeners. Safe to derive from the same vars they depend on, with zero risk of infinite cycles.
+</div>
 </section>
 <section class="doc-section"><h2>Lifecycle — on:mount
 </h2>
 <p><code>on:mount { \}
 </code>
- runs once in 
+ runs once at 
 <code>DOMContentLoaded
 </code>
-, after the runtime is ready. Wrapped in an IIFE for variable isolation.
+, after the reactive runtime is ready. Wrapped in an IIFE for variable isolation.
 </p>
 <pre class="code-block">component Clock {
     state { time: String = &quot;&quot; \}
     on:mount {
-        const tick = () =&gt; { S.set(&quot;time&quot;, new Date().toLocaleTimeString()); bind(); \};
+        const tick = () =&gt; {
+            S.set(&quot;time&quot;, new Date().toLocaleTimeString());
+            bind();
+        \};
         tick();
         window.__clockId = setInterval(tick, 1000);
     \}
@@ -168,14 +173,14 @@ StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
 </code>
 . Use it to clean up timers, cancel requests, or deregister listeners.
 </p>
-<pre class="code-block">// Runtime output (tree-shaken in)
+<pre class="code-block">// Compiled output (tree-shaken in only when used)
 const DESTROY_HOOKS = [
     () =&gt; { clearInterval(window.__clockId); \}
 ];
 function runDestroyHooks() { DESTROY_HOOKS.forEach(h =&gt; h()); \}
 window.addEventListener(&#x27;beforeunload&#x27;, runDestroyHooks);
 </pre>
-<p><code>DESTROY_HOOKS
+<div class="callout-tip"><code>DESTROY_HOOKS
 </code>
  and 
 <code>runDestroyHooks
@@ -183,14 +188,17 @@ window.addEventListener(&#x27;beforeunload&#x27;, runDestroyHooks);
  are emitted only when at least one 
 <code>on:destroy
 </code>
- block is present.
-</p>
+ block is present in the document — full tree-shaking.
+</div>
 </section>
 <section class="doc-section"><h2>Inter-component events
 </h2>
 <p><code>emit(&quot;name&quot;, data)
 </code>
- dispatches a CustomEvent on document. Listen with 
+ dispatches a 
+<code>CustomEvent
+</code>
+ on document. Listen with 
 <code>on:name={handler\}
 </code>
  at the call site.
@@ -203,24 +211,30 @@ component Notifier {
     \}
 \}
 
-// Listening to events at call site
+// Call site — subscribe to events
 page &quot;home&quot; {
     Notifier on:ping={total += 1\} on:reset={total = 0\} {\}
     p &quot;Received {total\} pings&quot;
 \}
 </pre>
-<p>Events are global (document). Payload accessible via 
+<div class="callout">Events are dispatched on 
+<code>document
+</code>
+ — they are global. The payload is accessible via 
 <code>e.detail
 </code>
- in handler.
-</p>
+ in the handler expression.
+</div>
 </section>
 <section class="doc-section"><h2>Scoped style and @media
 </h2>
 <p>Every component gets a unique 
 <code>data-v
 </code>
- attribute (FNV-1a hash). Media queries inside 
+ attribute computed as a deterministic FNV-1a hash of the component name. 
+<code>@media
+</code>
+ queries inside 
 <code>style { \}
 </code>
  are scoped automatically.
@@ -240,7 +254,10 @@ page &quot;home&quot; {
 </section>
 <section class="doc-section"><h2>Live demo
 </h2>
-<p>The counter below is a live WebCore component with state, computed, and @if.
+<p>The counter below is a live WebCore component — state, computed, and 
+<code>@if
+</code>
+ directive all active.
 </p>
 <div data-v="wc-90dbe1" class="demo-box"><p data-v="wc-90dbe1" class="demo-label">Live Demo — Reactive Counter
 </p>
@@ -280,10 +297,18 @@ page &quot;home&quot; {
 <footer class="site-footer"><p>Built with 
 <strong>WebCore
 </strong>
- — a declarative language compiled with Rust.
+ · 
+<a href="https://github.com/PrinMeshia/Webcore">GitHub
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/releases">Releases
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/blob/main/CHANGELOG.md">Changelog
+</a>
 </p>
 </footer>
 </div>
-  <script src="webcore.js?v=1407e1df"></script>
+  <script src="assets/webcore.js?v=fd9fde34"></script>
 </body>
 </html>

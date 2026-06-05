@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebCore Docs</title>
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+<div class="docs-shell">
+<header class="site-header"><div class="header-inner"><a class="logo" href="/" onclick="webcore_navigate('/'); return false;"><span class="logo-mark">▸
+</span>
+<span class="logo-text">WebCore
+</span>
+<span class="logo-version">v1.1.1
+</span>
+</a>
+<nav class="site-nav"><a href="/" onclick="webcore_navigate('/'); return false;">Home
+</a>
+<a href="/syntax" onclick="webcore_navigate('/syntax'); return false;">Syntax
+</a>
+<a href="/components" onclick="webcore_navigate('/components'); return false;">Components
+</a>
+<a href="/features" onclick="webcore_navigate('/features'); return false;">Features
+</a>
+<a href="/examples" onclick="webcore_navigate('/examples'); return false;">Examples
+</a>
+</nav>
+</div>
+</header>
+<main class="site-main"><div class="page-header"><h1>Examples
+</h1>
+<p class="page-sub">Full projects built with WebCore — run any of them locally with 
+<code>webc dev
+</code>
+</p>
+</div>
+<section class="doc-section"><h2>Included examples
+</h2>
+<p>All examples live under 
+<code>examples/
+</code>
+ in the repository. Each compiles to a standalone 
+<code>dist/
+</code>
+ — no framework, no bundler, no client-side dependencies.
+</p>
+<div class="examples-grid"><div class="example-card"><code class="example-tag">counter
+</code>
+<h3>Counter
+</h3>
+<p>Minimal reactive counter with increment and decrement. The simplest possible WebCore app — ideal starting point.
+</p>
+<pre class="code-block">cd examples/counter
+webc dev
+</pre>
+</div>
+<div class="example-card"><code class="example-tag">todo
+</code>
+<h3>Todo
+</h3>
+<p>Todo list with add, toggle done, and delete. Demonstrates @for, @if, and reactive state with computed values and @for key diffing.
+</p>
+<pre class="code-block">cd examples/todo
+webc dev
+</pre>
+</div>
+<div class="example-card"><code class="example-tag">blog
+</code>
+<h3>Blog
+</h3>
+<p>Multi-page blog with parameterized routes (/post/:slug). Shows SPA routing, $route params, and global store for theme switching.
+</p>
+<pre class="code-block">cd examples/blog
+webc dev
+</pre>
+</div>
+<div class="example-card"><code class="example-tag">forms
+</code>
+<h3>Forms
+</h3>
+<p>SignupForm and ContactForm with full declarative validation — required, email, minlength, maxlength, pattern, and @error blocks.
+</p>
+<pre class="code-block">cd examples/forms
+webc dev
+</pre>
+</div>
+<div class="example-card"><code class="example-tag">i18n
+</code>
+<h3>i18n
+</h3>
+<p>Internationalisation demo — t() calls, plural forms (items_one / items_other), positional params, and reactive setLocale().
+</p>
+<pre class="code-block">cd examples/i18n
+webc dev
+</pre>
+</div>
+<div class="example-card"><code class="example-tag">docs
+</code>
+<h3>Docs
+</h3>
+<p>This documentation site — 5 pages, SPA routing, named slots, copy-to-clipboard, active nav, and a minimal design system.
+</p>
+<pre class="code-block">cd examples/docs
+webc dev
+</pre>
+</div>
+</div>
+</section>
+<section class="doc-section"><h2>Project structure
+</h2>
+<p>Every example follows the same layout:
+</p>
+<pre class="code-block">my-project/
+├── webc.toml          # project name, entry point
+├── theme.toml         # design tokens (colors, spacing, fonts)
+├── public/
+│   └── styles.css     # optional extra styles
+└── src/
+    ├── app.webc       # routes + layout declaration
+    ├── layouts/
+    │   └── Main.webc
+    ├── pages/
+    │   └── home.webc
+    └── components/
+        └── Counter.webc
+</pre>
+</section>
+<section class="doc-section"><h2>Scaffold a new project
+</h2>
+<p>Use 
+<code>webc new
+</code>
+ to generate a full project skeleton — webc.toml, theme.toml, layout, homepage, and a Counter component.
+</p>
+<pre class="code-block">webc new my-app
+cd my-app
+webc dev
+</pre>
+<p>The scaffold generates a working Counter component with reactive state and scoped CSS, so you have something to build on immediately.
+</p>
+</section>
+<section class="doc-section"><h2>Building for production
+</h2>
+<p>Run 
+<code>webc build
+</code>
+ to produce a minified, production-ready 
+<code>dist/
+</code>
+ — CSS is processed with LightningCSS, JS is stripped of comments and whitespace.
+</p>
+<pre class="code-block">webc build        # minified output in dist/
+webc build dev    # un-minified, easier to inspect
+</pre>
+</section>
+</main>
+<footer class="site-footer"><p>Built with 
+<strong>WebCore
+</strong>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore">GitHub
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/releases">Releases
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/blob/main/CHANGELOG.md">Changelog
+</a>
+</p>
+</footer>
+</div>
+  <script src="assets/webcore.js?v=fd9fde34"></script>
+</body>
+</html>
