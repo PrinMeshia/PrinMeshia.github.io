@@ -4,24 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebCore Docs</title>
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="docs.css">
+  <link rel="stylesheet" href="assets/theme.css">
+  <link rel="stylesheet" href="assets/docs.css">
 </head>
 <body>
-<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+<div class="docs-shell">
+<header class="site-header"><div class="header-inner"><a class="logo" href="/" onclick="webcore_navigate('/'); return false;"><span class="logo-mark">▸
 </span>
 <span class="logo-text">WebCore
 </span>
-<span class="logo-version">v1.1
+<span class="logo-version">v1.1.1
 </span>
-</div>
-<nav class="site-nav"><a href="/">Home
 </a>
-<a href="/syntax">Syntax
+<nav class="site-nav"><a href="/" onclick="webcore_navigate('/'); return false;">Home
 </a>
-<a href="/components">Components
+<a href="/syntax" onclick="webcore_navigate('/syntax'); return false;">Syntax
 </a>
-<a href="/features">Features
+<a href="/components" onclick="webcore_navigate('/components'); return false;">Components
+</a>
+<a href="/features" onclick="webcore_navigate('/features'); return false;">Features
+</a>
+<a href="/examples" onclick="webcore_navigate('/examples'); return false;">Examples
 </a>
 </nav>
 </div>
@@ -31,15 +34,60 @@
 <p class="page-sub">Complete reference for the 
 <code>.webc
 </code>
- language syntax.
+ language — all constructs, directives and built-ins.
 </p>
+</div>
+<div class="quick-ref"><code>app {\}
+</code>
+<code>layout {\}
+</code>
+<code>page {\}
+</code>
+<code>component {\}
+</code>
+<code>store {\}
+</code>
+<code>state {\}
+</code>
+<code>computed {\}
+</code>
+<code>props {\}
+</code>
+<code>@if / @else
+</code>
+<code>@for
+</code>
+<code>@for key=
+</code>
+<code>@error
+</code>
+<code>on:click=
+</code>
+<code>on:mount
+</code>
+<code>on:destroy
+</code>
+<code>emit()
+</code>
+<code>t()
+</code>
+<code>$store.
+</code>
+<code>$route.
+</code>
+<code>slot content
+</code>
+<code>link to=
+</code>
+<code>validate:
+</code>
 </div>
 <section class="doc-section"><h2>Application
 </h2>
 <p>The 
 <code>app
 </code>
- block is the entry point. It declares the layout and route table.
+ block is the entry point. It declares the theme, layout and route table.
 </p>
 <pre class="code-block">app MyApp {
     theme: &quot;default&quot;
@@ -105,8 +153,7 @@ layout DashLayout {
 <p>Expressions inside 
 <code>{\}
 </code>
- are evaluated reactively at runtime. They support arithmetic, comparisons, 
-function calls and computed variables.
+ are evaluated reactively. They support arithmetic, comparisons, function calls and computed variables.
 </p>
 <pre class="code-block">p &quot;Count: {count\}&quot;
 p &quot;Next: {count + 1\}&quot;
@@ -117,53 +164,64 @@ div class={dynamicClass\} { \}
 </section>
 <section class="doc-section"><h2>Control flow
 </h2>
-<pre class="code-block">// @if / @else -- reactive condition
+<pre class="code-block">// Conditional
 @if count &gt; 0 {
     p &quot;Positive&quot;
 \} @else {
     p &quot;Zero or negative&quot;
 \}
 
-// @for -- reactive list render (full re-render on change)
+// List — full re-render on change
 @for item in items {
     li &quot;{item\}&quot;
 \}
 
-// @for with key -- key-based DOM diffing (v1.1.0)
-// Only modified nodes are patched; focus and animation are preserved
+// List with key — DOM diffing (only changed nodes patched)
 @for post key=post.id in posts {
     article &quot;{post.title\}&quot;
 \}
 
-// @error -- validation error block
+// Validation error block
 @error &quot;email&quot; {
     span class=&quot;error&quot; &quot;Invalid email&quot;
 \}
 </pre>
-<p>With 
-<code>key=expr
+<div class="callout"><strong>Key diffing: 
+</strong>
+The 
+<code>key=
 </code>
- the runtime compares keys before patching. 
-Added nodes are inserted, removed nodes are deleted, unchanged ones stay untouched.
-</p>
+ expression must be unique within the list. Use 
+<code>item.id
+</code>
+ or 
+<code>item.slug
+</code>
+. Added nodes are inserted, removed ones deleted, unchanged ones stay — preserving focus and animation state.
+</div>
 </section>
 <section class="doc-section"><h2>Events
 </h2>
 <p>Use 
 <code>on:&lt;type&gt;={expr\}
 </code>
- on any element. The expression runs when the event fires.
+ on any element. Multiple instructions can be separated by 
+<code>;
+</code>
+.
 </p>
 <pre class="code-block">button on:click={count += 1\}                    { &quot;+&quot; \}
-button on:click={count = max(0, count - 1)\}      { &quot;-&quot; \}
-button on:click={count = 0\}                      { &quot;Reset&quot; \}
+button on:click={count = max(0, count - 1)\}      { &quot;−&quot; \}
 input  on:input={name = event.target.value\}
 form   on:submit={handleSubmit\}
 
 // Navigation
 button on:click={webcore_navigate(&quot;/about&quot;)\} { &quot;Go&quot; \}
 
-// Inter-component events
+// Multi-instruction handler
+button on:click={items = [...items, newItem]; draft = &quot;&quot;\} { &quot;Add&quot; \}
+
+// Inter-component event
 button on:click={emit(&quot;ping&quot;, count)\} { &quot;Ping&quot; \}
 </pre>
 </section>
@@ -180,37 +238,41 @@ input required
 div class={dynamicClass\}
 input value={count\}
 
-// Validation
+// Validation attributes
 input name=&quot;email&quot;
       validate:required=&quot;Email is required&quot;
       validate:email=&quot;Invalid address&quot;
+      validate:minlength=&quot;3,At least 3 chars&quot;
 </pre>
 </section>
 <section class="doc-section"><h2>Navigation
 </h2>
-<pre class="code-block">// Declarative link (SPA-aware)
+<pre class="code-block">// Declarative SPA link
 link to=&quot;/about&quot; { &quot;About&quot; \}
+link to=&quot;/about&quot; class=&quot;nav-link&quot; { &quot;About&quot; \}
 
 // Programmatic
 button on:click={webcore_navigate(&quot;/about&quot;)\} { &quot;Go&quot; \}
-button on:click={webcore_navigate(root)\}      { &quot;Home&quot; \}
+button on:click={webcore_navigate(&quot;/user/&quot; + userId)\} { &quot;Profile&quot; \}
 </pre>
-<p>Navigation uses 
+<div class="callout-tip">Navigation uses 
 <code>history.pushState
 </code>
  + fetch — no full page reload. 
 <code>on:destroy
 </code>
  hooks run automatically before each navigation.
-</p>
+</div>
 </section>
-<section class="doc-section"><h2>Parameterized routes (v1.1.0)
+<section class="doc-section"><h2>Parameterized routes 
+<span class="version-tag">v1.1.0
+</span>
 </h2>
 <p>Route segments prefixed with 
 <code>:
 </code>
  capture dynamic values. Access them in views with 
-<code><span data-webcore-interpolation="$route.paramName"></span>
+<code>{$route.paramName\}
 </code>
 .
 </p>
@@ -226,31 +288,37 @@ app MyApp {
 // src/pages/post.webc
 page &quot;post&quot; {
     h1 &quot;Article: {$route.slug\}&quot;
-    p  &quot;Reading post ID: {$route.slug\}&quot;
 \}
 
-// Navigation to a parameterized route
+// Navigate to a parameterized route
 link to=&quot;/post/hello-world&quot; { &quot;Hello World&quot; \}
 button on:click={webcore_navigate(&quot;/user/&quot; + userId)\} { &quot;Profile&quot; \}
 </pre>
-<p>The compiler generates a 
+<div class="callout">The compiler generates a 
 <code>ROUTES[]
 </code>
- array with RegExp patterns. 
+ array with RegExp patterns and a 
 <code>ROUTE_PARAMS
 </code>
- is updated on every navigation and at page load. 
-Both arrays are tree-shaken when no parameterized routes are declared.
-</p>
+ object updated on every navigation. Both are tree-shaken when no parameterized routes are declared.
+</div>
 </section>
 </main>
 <footer class="site-footer"><p>Built with 
 <strong>WebCore
 </strong>
- — a declarative language compiled with Rust.
+ · 
+<a href="https://github.com/PrinMeshia/Webcore">GitHub
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/releases">Releases
+</a>
+ · 
+<a href="https://github.com/PrinMeshia/Webcore/blob/main/CHANGELOG.md">Changelog
+</a>
 </p>
 </footer>
 </div>
-  <script src="webcore.js?v=1407e1df"></script>
+  <script src="assets/webcore.js?v=fd9fde34"></script>
 </body>
 </html>
