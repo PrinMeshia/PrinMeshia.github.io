@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebCore Docs</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+</span>
+<span class="logo-text">WebCore
+</span>
+<span class="logo-version">v1.1
+</span>
+</div>
+<nav class="site-nav"><a href="/">Home
+</a>
+<a href="/syntax">Syntax
+</a>
+<a href="/components">Components
+</a>
+<a href="/features">Features
+</a>
+</nav>
+</div>
+</header>
+<main class="site-main"><div class="page-header"><h1>Features
+</h1>
+<p class="page-sub">Store · Validation · SSG · i18n · WASM · Tree-shaking · Routes
+</p>
+</div>
+<section class="doc-section"><h2>Global store
+</h2>
+<p>The 
+<code>store { \}
+</code>
+ block declares reactive state shared across all components.
+</p>
+<pre class="code-block">// app.webc
+store {
+    count:  Number  = 0
+    theme:  String  = &quot;dark&quot;
+    active: Boolean = false
+\}
+
+// Any component -- prefix with $store.
+component Display {
+    view {
+        p &quot;Global count: {$store.count\}&quot;
+        button on:click={$store.count += 1\} { &quot;+&quot; \}
+    \}
+\}
+
+component Badge {
+    view {
+        @if $store.active {
+            span &quot;Active&quot;
+        \} @else {
+            span &quot;Inactive&quot;
+        \}
+    \}
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Form validation
+</h2>
+<p>Declarative validation attributes on inputs — no JS event wiring needed.
+</p>
+<pre class="code-block">component SignupForm {
+    view {
+        form on:submit={handleSubmit\} {
+            label &quot;Username&quot;
+            input type=&quot;text&quot; name=&quot;username&quot;
+                  validate:required=&quot;Username is required&quot;
+                  validate:minlength=&quot;3,At least 3 characters&quot;
+            @error &quot;username&quot; {
+                span class=&quot;error-msg&quot; &quot;Check your username&quot;
+            \}
+            label &quot;Email&quot;
+            input type=&quot;email&quot; name=&quot;email&quot;
+                  validate:required=&quot;Email is required&quot;
+                  validate:email=&quot;Must be a valid email&quot;
+            @error &quot;email&quot; {
+                span class=&quot;error-msg&quot; &quot;Check your email&quot;
+            \}
+            button type=&quot;submit&quot; { &quot;Sign up&quot; \}
+        \}
+    \}
+\}
+</pre>
+<p>Validation fires on blur and submit. 
+<code>@error
+</code>
+ blocks are hidden by default; shown on failure.
+</p>
+<div class="table-wrap"><table><thead><tr><th>Attribute
+</th>
+<th>Format
+</th>
+<th>Description
+</th>
+</tr>
+</thead>
+<tbody><tr><td><code>validate:required
+</code>
+</td>
+<td>&quot;message&quot;
+</td>
+<td>Field must not be empty
+</td>
+</tr>
+<tr><td><code>validate:minlength
+</code>
+</td>
+<td>&quot;n,message&quot;
+</td>
+<td>Minimum character count
+</td>
+</tr>
+<tr><td><code>validate:maxlength
+</code>
+</td>
+<td>&quot;n,message&quot;
+</td>
+<td>Maximum character count
+</td>
+</tr>
+<tr><td><code>validate:email
+</code>
+</td>
+<td>&quot;message&quot;
+</td>
+<td>Email format check
+</td>
+</tr>
+<tr><td><code>validate:pattern
+</code>
+</td>
+<td>&quot;regex,message&quot;
+</td>
+<td>Custom regex
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="doc-section"><h2>Static Site Generation (SSG)
+</h2>
+<p>The compiler pre-renders initial state into HTML at build time. 
+No flash of unstyled or wrong content on first paint.
+</p>
+<pre class="code-block">// .webc source -- state: count = 0
+p &quot;Counter: {count\}&quot;
+@if count &gt; 0 { p &quot;Positive&quot; \} @else { p &quot;Zero&quot; \}
+
+// HTML output (SSG pre-rendered)
+&lt;p&gt;Counter: &lt;span data-webcore-interpolation=&quot;count&quot;&gt;0&lt;/span&gt;&lt;/p&gt;
+&lt;div data-webcore-if=&quot;count &gt; 0&quot; style=&quot;display:none&quot;&gt;...&lt;/div&gt;
+&lt;div data-webcore-else=&quot;count &gt; 0&quot; style=&quot;display:block&quot;&gt;...&lt;/div&gt;
+</pre>
+</section>
+<section class="doc-section"><h2>Internationalisation (i18n)
+</h2>
+<p>Place .toml files in 
+<code>locales/
+</code>
+. Use 
+<code>t(&quot;key&quot;)
+</code>
+ in views. Switch with 
+<code>setLocale(code)
+</code>
+.
+</p>
+<pre class="code-block">// locales/en.toml
+welcome   = &quot;Welcome&quot;
+increment = &quot;Increment&quot;
+
+// locales/fr.toml
+welcome   = &quot;Bienvenue&quot;
+increment = &quot;Incrementer&quot;
+
+// Component view
+h1 &quot;{t(&quot;welcome&quot;)\}&quot;
+button on:click={count += 1\} { &quot;{t(&quot;increment&quot;)\}&quot; \}
+button on:click={setLocale(&quot;fr&quot;)\} { &quot;FR&quot; \}
+button on:click={setLocale(&quot;en&quot;)\} { &quot;EN&quot; \}
+</pre>
+</section>
+<section class="doc-section"><h2>i18n: parameters and pluralization (v1.1.0)
+</h2>
+<p>Pass a second argument to 
+<code>t()
+</code>
+ for pluralization or positional substitution.
+</p>
+<pre class="code-block">// locales/en.toml
+items_one   = &quot;
+<span data-webcore-interpolation="{count"></span>
+} item&quot;
+items_other = &quot;
+<span data-webcore-interpolation="{count"></span>
+} items&quot;
+greeting    = &quot;Hello, 
+<span data-webcore-interpolation="{0"></span>
+}!&quot;
+score       = &quot;Your score: 
+<span data-webcore-interpolation="{0"></span>
+} / 
+<span data-webcore-interpolation="{1"></span>
+}&quot;
+
+// locales/fr.toml
+items_one   = &quot;
+<span data-webcore-interpolation="{count"></span>
+} element&quot;
+items_other = &quot;
+<span data-webcore-interpolation="{count"></span>
+} elements&quot;
+greeting    = &quot;Bonjour, 
+<span data-webcore-interpolation="{0"></span>
+} !&quot;
+</pre>
+<pre class="code-block">// Pluralization -- uses _one or _other key
+p &quot;{t(&quot;items&quot;, 1)\}&quot;       // &quot;1 item&quot;
+p &quot;{t(&quot;items&quot;, count)\}&quot;   // &quot;3 items&quot; (reactive)
+
+// Positional substitution
+p &quot;{t(&quot;greeting&quot;, username)\}&quot;  // &quot;Hello, Alice!&quot;
+</pre>
+<div class="table-wrap"><table><thead><tr><th>Call
+</th>
+<th>Behaviour
+</th>
+</tr>
+</thead>
+<tbody><tr><td><code>t(&quot;key&quot;)
+</code>
+</td>
+<td>Simple lookup — returns the value or the key if missing
+</td>
+</tr>
+<tr><td><code>t(&quot;key&quot;, n)
+</code>
+</td>
+<td>Number → picks _one (n=1) or _other, replaces 
+<span data-webcore-interpolation="{count"></span>
+}
+</td>
+</tr>
+<tr><td><code>t(&quot;key&quot;, val)
+</code>
+</td>
+<td>Non-number → replaces 
+<span data-webcore-interpolation="{0"></span>
+} with val
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="doc-section"><h2>WebAssembly (WASM)
+</h2>
+<p>Place a Rust crate in 
+<code>wasm/
+</code>
+. The compiler detects it, runs wasm-pack, and injects an async loader.
+</p>
+<pre class="code-block">// wasm/src/lib.rs
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
+pub fn compute(n: u32) -&gt; u32 { n * n \}
+
+// WebCore component
+component WasmDemo {
+    state { result: Number = 0 \}
+    view {
+        button on:click={result = wasm.compute(result)\} { &quot;Compute&quot; \}
+        p &quot;Result: {result\}&quot;
+    \}
+\}
+</pre>
+<p><code>globalThis.wasm
+</code>
+ is filled asynchronously after load. A full rebind fires on success.
+</p>
+</section>
+<section class="doc-section"><h2>Runtime tree-shaking
+</h2>
+<p>The compiler emits only the runtime functions actually used by the document.
+</p>
+<pre class="code-block">// Minimal bundle -- no @for, @if, validation, routing, or WASM
+class State {
+  #d=new Map(); #l=new Map();
+  set(k,v){ this.#d.set(k,v); this.#l.get(k)?.forEach(f=&gt;f(v)) \}
+  setQ(k,v){ this.#d.set(k,v) \}
+  get(k){ return this.#d.get(k) \}
+  on(k,f){ (this.#l.get(k)??this.#l.set(k,[]).get(k)).push(f) \}
+\}
+const S = new State();
+// bindIf, bindFor, bindAttrs, nav, validateField -- absent
+</pre>
+<div class="feature-table"><table><thead><tr><th>Feature
+</th>
+<th>Emitted when...
+</th>
+</tr>
+</thead>
+<tbody><tr><td><code>bindFor()
+</code>
+</td>
+<td>At least one 
+<code>@for
+</code>
+</td>
+</tr>
+<tr><td><code>bindIf()
+</code>
+</td>
+<td>At least one 
+<code>@if
+</code>
+</td>
+</tr>
+<tr><td><code>bindAttrs()
+</code>
+</td>
+<td>At least one 
+<code>attr={expr\}
+</code>
+</td>
+</tr>
+<tr><td><code>validateField()
+</code>
+</td>
+<td>At least one 
+<code>validate:*
+</code>
+ or 
+<code>@error
+</code>
+</td>
+</tr>
+<tr><td><code>nav() + popstate
+</code>
+</td>
+<td>Routes declared or 
+<code>webcore_navigate()
+</code>
+ used
+</td>
+</tr>
+<tr><td><code>DESTROY_HOOKS
+</code>
+</td>
+<td>At least one 
+<code>on:destroy {\}
+</code>
+</td>
+</tr>
+<tr><td><code>COMPUTED + rebindComputed()
+</code>
+</td>
+<td>At least one 
+<code>computed {\}
+</code>
+</td>
+</tr>
+<tr><td>WASM loader
+</td>
+<td><code>wasm/Cargo.toml
+</code>
+ exists
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<footer class="site-footer"><p>Built with 
+<strong>WebCore
+</strong>
+ — a declarative language compiled with Rust.
+</p>
+</footer>
+</div>
+  <script src="webcore.js?v=1407e1df"></script>
+</body>
+</html>

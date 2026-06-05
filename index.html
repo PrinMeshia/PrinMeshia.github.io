@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebCore Docs</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+</span>
+<span class="logo-text">WebCore
+</span>
+<span class="logo-version">v1.1
+</span>
+</div>
+<nav class="site-nav"><a href="/">Home
+</a>
+<a href="/syntax">Syntax
+</a>
+<a href="/components">Components
+</a>
+<a href="/features">Features
+</a>
+</nav>
+</div>
+</header>
+<main class="site-main"><div class="hero"><div class="hero-badge">v1.1.0 — Stable
+</div>
+<h1 class="hero-title">Build web interfaces
+<span class="hero-accent"> declaratively
+</span>
+</h1>
+<p class="hero-sub">WebCore unifies HTML, CSS and JavaScript into a single 
+<code>.webc
+</code>
+ syntax. The Rust compiler generates semantic HTML, 
+scoped CSS and a minimal reactive runtime — no framework, no bundler.
+</p>
+<div class="hero-actions"><a class="btn-hero-primary" href="/syntax">Read the Docs
+</a>
+<a class="btn-hero-secondary" href="/components">Component Model
+</a>
+</div>
+<div class="hero-snippet"><pre class="hero-code">component Counter {
+    state  { count: Number = 0 \}
+    computed { doubled = count * 2 \}
+    view {
+        div {
+            p &quot;Value: {count\} * 2 = {doubled\}&quot;
+            button on:click={count += 1\} { &quot;+&quot; \}
+        \}
+    \}
+    style { div { display: flex; gap: 1rem; \} \}
+\}
+</pre>
+</div>
+</div>
+<section class="section"><h2 class="section-title">Why WebCore?
+</h2>
+<div class="feature-grid"><div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">⚡
+</span>
+<span data-v="wc-084d57" class="feature-tag">Performance
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">Zero runtime dependencies
+</h3>
+<p data-v="wc-084d57" class="feature-desc">The compiler emits only the JS helpers your document actually uses. Simple apps get a tiny bundle.
+</p>
+</div>
+
+<div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">🦀
+</span>
+<span data-v="wc-084d57" class="feature-tag">Reliability
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">Rust-powered compiler
+</h3>
+<p data-v="wc-084d57" class="feature-desc">A Pest PEG grammar drives a fully typed AST. Errors include file, line, column and source context.
+</p>
+</div>
+
+<div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">🔒
+</span>
+<span data-v="wc-084d57" class="feature-tag">Isolation
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">Scoped CSS by default
+</h3>
+<p data-v="wc-084d57" class="feature-desc">Each component gets a deterministic FNV-1a hash. Styles never leak across component boundaries.
+</p>
+</div>
+
+<div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">🌐
+</span>
+<span data-v="wc-084d57" class="feature-tag">Routing
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">SPA routing built-in
+</h3>
+<p data-v="wc-084d57" class="feature-desc">History API navigation with no full page reload. Routes are declared directly in the app block.
+</p>
+</div>
+
+<div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">🎛️
+</span>
+<span data-v="wc-084d57" class="feature-tag">Reactivity
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">Reactive state
+</h3>
+<p data-v="wc-084d57" class="feature-desc">ES2022 private-field State class. Computed vars, lifecycle hooks, and inter-component events included.
+</p>
+</div>
+
+<div data-v="wc-084d57" class="feature-card"><div data-v="wc-084d57" class="feature-header"><span data-v="wc-084d57" class="feature-icon">📦
+</span>
+<span data-v="wc-084d57" class="feature-tag">SSG
+</span>
+</div>
+<h3 data-v="wc-084d57" class="feature-title">Static Site Generation
+</h3>
+<p data-v="wc-084d57" class="feature-desc">Initial state values are pre-rendered at compile time. No flash of unstyled or wrong content.
+</p>
+</div>
+
+</div>
+</section>
+<section class="section"><h2 class="section-title">Try it live
+</h2>
+<p class="section-sub">This counter is a real 
+<code>LiveCounter
+</code>
+ WebCore component — state, computed vars, 
+<code>@if
+</code>
+ directive and responsive styles.
+</p>
+<div data-v="wc-90dbe1" class="demo-box"><p data-v="wc-90dbe1" class="demo-label">Live Demo — Reactive Counter
+</p>
+<div data-v="wc-90dbe1" class="counter-display"><span data-v="wc-90dbe1" class="counter-value"><span data-webcore-interpolation="count">0</span>
+</span>
+</div>
+<div data-v="wc-90dbe1" class="counter-controls"><button data-v="wc-90dbe1" class="btn btn-secondary" id="homebtn1" onclick="webcore_handle_click('homebtn1'); return false;">−
+<span data-webcore-interpolation="step">1</span>
+</button>
+<button data-v="wc-90dbe1" class="btn btn-primary" id="homebtn2" onclick="webcore_handle_click('homebtn2'); return false;">+
+<span data-webcore-interpolation="step">1</span>
+</button>
+<button data-v="wc-90dbe1" class="btn btn-ghost" id="homebtn3" onclick="webcore_handle_click('homebtn3'); return false;">Reset
+</button>
+</div>
+<div data-v="wc-90dbe1" class="counter-info"><span data-v="wc-90dbe1">Doubled: 
+</span>
+<strong data-v="wc-90dbe1"><span data-webcore-interpolation="doubled"></span>
+</strong>
+<span data-v="wc-90dbe1"> · Step: 
+</span>
+<input data-v="wc-90dbe1" data-webcore-bound type="number" class="step-input" data-webcore-attr-value="step" id="homebtn4" oninput="webcore_handle_input('homebtn4')"></input>
+</div>
+<div data-webcore-if="count &gt; 9" data-v="wc-90dbe1" style="display:none">
+<p data-v="wc-90dbe1" class="badge badge-accent">Double digits!
+</p>
+</div>
+<div data-webcore-else="count &gt; 9" data-v="wc-90dbe1" style="display:block">
+<p data-v="wc-90dbe1" class="badge badge-muted">Keep going…
+</p>
+</div>
+
+</div>
+
+</section>
+<section class="section"><h2 class="section-title">Get started in seconds
+</h2>
+<div class="install-steps"><div class="install-step"><span class="step-num">1
+</span>
+<div><strong>Clone and build
+</strong>
+<pre class="inline-code">git clone https://github.com/PrinMeshia/Webcore.git
+cd Webcore/webcore-compiler
+cargo build --release
+</pre>
+</div>
+</div>
+<div class="install-step"><span class="step-num">2
+</span>
+<div><strong>Scaffold a new project
+</strong>
+<pre class="inline-code">./target/release/webcore-compiler new my-app
+</pre>
+</div>
+</div>
+<div class="install-step"><span class="step-num">3
+</span>
+<div><strong>Start the dev server
+</strong>
+<pre class="inline-code">cd my-app &amp;&amp; webc dev 3000
+</pre>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="site-footer"><p>Built with 
+<strong>WebCore
+</strong>
+ — a declarative language compiled with Rust.
+</p>
+</footer>
+</div>
+  <script src="webcore.js?v=1407e1df"></script>
+</body>
+</html>

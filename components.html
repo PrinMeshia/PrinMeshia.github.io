@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebCore Docs</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+</span>
+<span class="logo-text">WebCore
+</span>
+<span class="logo-version">v1.1
+</span>
+</div>
+<nav class="site-nav"><a href="/">Home
+</a>
+<a href="/syntax">Syntax
+</a>
+<a href="/components">Components
+</a>
+<a href="/features">Features
+</a>
+</nav>
+</div>
+</header>
+<main class="site-main"><div class="page-header"><h1>Component Model
+</h1>
+<p class="page-sub">Props · State · Computed · Lifecycle · Events · Routes
+</p>
+</div>
+<section class="doc-section"><h2>Anatomy of a component
+</h2>
+<pre class="code-block">component MyComponent {
+    props    { ... \}      // pass-in values
+    state    { ... \}      // local reactive state
+    computed { ... \}      // derived values
+    on:mount   { ... \}    // runs at DOMContentLoaded
+    on:destroy { ... \}    // runs before navigation / unload
+    view     { ... \}      // required -- the HTML tree
+    style    { ... \}      // scoped CSS
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Props
+</h2>
+<p>Props are values passed into a component at call site. 
+They accept static strings or dynamic expressions.
+</p>
+<pre class="code-block">component Badge {
+    props { label: String, color: String \}
+    view  { span class={color\} &quot;Status: {label\}&quot; \}
+\}
+
+// Static props
+Badge label=&quot;Active&quot; color=&quot;green&quot; {\}
+
+// Dynamic props -- reactive
+Badge label={statusMsg\} color={statusColor\} {\}
+</pre>
+<p>A static prop (
+<code>name=&quot;value&quot;
+</code>
+) is substituted at compile time. 
+A dynamic prop (
+<code>name={expr\}
+</code>
+) compiles to a reactive interpolation span.
+</p>
+<p>Compound expressions using a prop name also work (v1.1.0):
+</p>
+<pre class="code-block">component StepCounter {
+    props { step: Number \}
+    view {
+        // {step + 1\} — prop used inside a compound expression
+        p &quot;Next step: {step + 1\}&quot;
+        // class={color\} — prop used as a dynamic attribute
+        span class={color\} &quot;Status&quot;
+    \}
+\}
+
+// Call site
+StepCounter step=&quot;2&quot; color=&quot;green&quot; {\}
+// Renders: &quot;Next step: (2) + 1&quot; (evaluated at runtime)
+//          &lt;span class=&quot;green&quot;&gt;
+</pre>
+</section>
+<section class="doc-section"><h2>State
+</h2>
+<p>Local reactive state. Any assignment triggers a DOM update.
+</p>
+<pre class="code-block">state {
+    count:  Number  = 0
+    name:   String  = &quot;World&quot;
+    active: Boolean = true
+    items:  List    = []
+\}
+</pre>
+<p>Types: 
+<code>Number
+</code>
+ · 
+<code>String
+</code>
+ · 
+<code>Boolean
+</code>
+ · 
+<code>List
+</code>
+</p>
+</section>
+<section class="doc-section"><h2>Computed — derived state
+</h2>
+<p>The 
+<code>computed
+</code>
+ block declares variables derived from state. Re-evaluated before every DOM bind.
+</p>
+<pre class="code-block">component FullName {
+    state {
+        firstName: String = &quot;Jean&quot;
+        lastName:  String = &quot;Dupont&quot;
+    \}
+    computed {
+        fullName = firstName + &quot; &quot; + lastName
+        initials = firstName + &quot;.&quot; + lastName
+    \}
+    on:mount { firstName = &quot;Marie&quot; \}
+    view { p &quot;Hello {fullName\} ({initials\})&quot; \}
+\}
+</pre>
+<p>Computed vars use 
+<code>S.setQ()
+</code>
+ (silent setter) — no listener triggers, no reactive loops.
+</p>
+</section>
+<section class="doc-section"><h2>Lifecycle — on:mount
+</h2>
+<p><code>on:mount { \}
+</code>
+ runs once in 
+<code>DOMContentLoaded
+</code>
+, after the runtime is ready. Wrapped in an IIFE for variable isolation.
+</p>
+<pre class="code-block">component Clock {
+    state { time: String = &quot;&quot; \}
+    on:mount {
+        const tick = () =&gt; { S.set(&quot;time&quot;, new Date().toLocaleTimeString()); bind(); \};
+        tick();
+        window.__clockId = setInterval(tick, 1000);
+    \}
+    on:destroy { clearInterval(window.__clockId); \}
+    view { p &quot;Time: {time\}&quot; \}
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Lifecycle — on:destroy
+</h2>
+<p><code>on:destroy { \}
+</code>
+ runs before every SPA navigation and on 
+<code>window.beforeunload
+</code>
+. Use it to clean up timers, cancel requests, or deregister listeners.
+</p>
+<pre class="code-block">// Runtime output (tree-shaken in)
+const DESTROY_HOOKS = [
+    () =&gt; { clearInterval(window.__clockId); \}
+];
+function runDestroyHooks() { DESTROY_HOOKS.forEach(h =&gt; h()); \}
+window.addEventListener(&#x27;beforeunload&#x27;, runDestroyHooks);
+</pre>
+<p><code>DESTROY_HOOKS
+</code>
+ and 
+<code>runDestroyHooks
+</code>
+ are emitted only when at least one 
+<code>on:destroy
+</code>
+ block is present.
+</p>
+</section>
+<section class="doc-section"><h2>Inter-component events
+</h2>
+<p><code>emit(&quot;name&quot;, data)
+</code>
+ dispatches a CustomEvent on document. Listen with 
+<code>on:name={handler\}
+</code>
+ at the call site.
+</p>
+<pre class="code-block">// Emitter component
+component Notifier {
+    view {
+        button on:click={emit(&quot;ping&quot;, count)\} { &quot;Ping&quot; \}
+        button on:click={emit(&quot;reset&quot;)\}       { &quot;Reset&quot; \}
+    \}
+\}
+
+// Listening to events at call site
+page &quot;home&quot; {
+    Notifier on:ping={total += 1\} on:reset={total = 0\} {\}
+    p &quot;Received {total\} pings&quot;
+\}
+</pre>
+<p>Events are global (document). Payload accessible via 
+<code>e.detail
+</code>
+ in handler.
+</p>
+</section>
+<section class="doc-section"><h2>Scoped style and @media
+</h2>
+<p>Every component gets a unique 
+<code>data-v
+</code>
+ attribute (FNV-1a hash). Media queries inside 
+<code>style { \}
+</code>
+ are scoped automatically.
+</p>
+<pre class="code-block">component Card {
+    view { div class=&quot;card&quot; { slot content \} \}
+    style {
+        .card { padding: 1rem; background: #1e293b; \}
+        @media (max-width: 768px) {
+            .card { padding: 0.5rem; \}
+        \}
+    \}
+\}
+// Output: .card[data-v=&quot;a1b2&quot;] { ... \}
+//         @media (...) { .card[data-v=&quot;a1b2&quot;] { ... \} \}
+</pre>
+</section>
+<section class="doc-section"><h2>Live demo
+</h2>
+<p>The counter below is a live WebCore component with state, computed, and @if.
+</p>
+<div data-v="wc-90dbe1" class="demo-box"><p data-v="wc-90dbe1" class="demo-label">Live Demo — Reactive Counter
+</p>
+<div data-v="wc-90dbe1" class="counter-display"><span data-v="wc-90dbe1" class="counter-value"><span data-webcore-interpolation="count">0</span>
+</span>
+</div>
+<div data-v="wc-90dbe1" class="counter-controls"><button data-v="wc-90dbe1" class="btn btn-secondary" id="componentsbtn1" onclick="webcore_handle_click('componentsbtn1'); return false;">−
+<span data-webcore-interpolation="step">1</span>
+</button>
+<button data-v="wc-90dbe1" class="btn btn-primary" id="componentsbtn2" onclick="webcore_handle_click('componentsbtn2'); return false;">+
+<span data-webcore-interpolation="step">1</span>
+</button>
+<button data-v="wc-90dbe1" class="btn btn-ghost" id="componentsbtn3" onclick="webcore_handle_click('componentsbtn3'); return false;">Reset
+</button>
+</div>
+<div data-v="wc-90dbe1" class="counter-info"><span data-v="wc-90dbe1">Doubled: 
+</span>
+<strong data-v="wc-90dbe1"><span data-webcore-interpolation="doubled"></span>
+</strong>
+<span data-v="wc-90dbe1"> · Step: 
+</span>
+<input data-v="wc-90dbe1" data-webcore-bound type="number" class="step-input" data-webcore-attr-value="step" id="componentsbtn4" oninput="webcore_handle_input('componentsbtn4')"></input>
+</div>
+<div data-webcore-if="count &gt; 9" data-v="wc-90dbe1" style="display:none">
+<p data-v="wc-90dbe1" class="badge badge-accent">Double digits!
+</p>
+</div>
+<div data-webcore-else="count &gt; 9" data-v="wc-90dbe1" style="display:block">
+<p data-v="wc-90dbe1" class="badge badge-muted">Keep going…
+</p>
+</div>
+
+</div>
+
+</section>
+</main>
+<footer class="site-footer"><p>Built with 
+<strong>WebCore
+</strong>
+ — a declarative language compiled with Rust.
+</p>
+</footer>
+</div>
+  <script src="webcore.js?v=1407e1df"></script>
+</body>
+</html>

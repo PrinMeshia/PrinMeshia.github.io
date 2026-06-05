@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebCore Docs</title>
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="docs.css">
+</head>
+<body>
+<div class="docs-shell"><header class="site-header"><div class="header-inner"><div class="logo"><span class="logo-mark">▸
+</span>
+<span class="logo-text">WebCore
+</span>
+<span class="logo-version">v1.1
+</span>
+</div>
+<nav class="site-nav"><a href="/">Home
+</a>
+<a href="/syntax">Syntax
+</a>
+<a href="/components">Components
+</a>
+<a href="/features">Features
+</a>
+</nav>
+</div>
+</header>
+<main class="site-main"><div class="page-header"><h1>Syntax Reference
+</h1>
+<p class="page-sub">Complete reference for the 
+<code>.webc
+</code>
+ language syntax.
+</p>
+</div>
+<section class="doc-section"><h2>Application
+</h2>
+<p>The 
+<code>app
+</code>
+ block is the entry point. It declares the layout and route table.
+</p>
+<pre class="code-block">app MyApp {
+    theme: &quot;default&quot;
+    layout: MainLayout
+    routes {
+        &quot;/&quot;:      HomePage
+        &quot;/about&quot;: AboutPage
+    \}
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Layout
+</h2>
+<p>Layouts wrap every page. Use 
+<code>slot content
+</code>
+ for the page injection point. Named slots support multi-zone layouts.
+</p>
+<pre class="code-block">// Single-slot layout
+layout MainLayout {
+    header { nav { link to=&quot;/&quot; { &quot;Home&quot; \} \} \}
+    main   { slot content \}
+    footer { p &quot;2025 My App&quot; \}
+\}
+
+// Multi-zone layout (named slots)
+layout DashLayout {
+    header { slot header  \}
+    aside  { slot sidebar \}
+    main   { slot content \}
+\}
+</pre>
+<p>Pages fill named slots with 
+<code>slot name { ... \}
+</code>
+ blocks.
+</p>
+<pre class="code-block">page &quot;dashboard&quot; {
+    slot header  { h1 &quot;Dashboard&quot; \}
+    slot sidebar { nav { link to=&quot;/&quot; &quot;Home&quot; \} \}
+    p &quot;Main content&quot;   // -&gt; default content slot
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Elements and content
+</h2>
+<p>Any standard HTML tag is valid. Inline text or block children — both work.
+</p>
+<pre class="code-block">div class=&quot;container&quot; {
+    h1 &quot;Hello world&quot;
+    p  &quot;Plain text node&quot;
+    p  { &quot;Mixed: &quot; strong { &quot;bold&quot; \} &quot; and plain.&quot; \}
+    img src=&quot;/logo.png&quot; alt=&quot;Logo&quot;
+    ul {
+        li &quot;Item one&quot;
+        li &quot;Item two&quot;
+    \}
+\}
+</pre>
+</section>
+<section class="doc-section"><h2>Interpolation
+</h2>
+<p>Expressions inside 
+<code>{\}
+</code>
+ are evaluated reactively at runtime. They support arithmetic, comparisons, 
+function calls and computed variables.
+</p>
+<pre class="code-block">p &quot;Count: {count\}&quot;
+p &quot;Next: {count + 1\}&quot;
+p &quot;Max: {max(a, b)\}&quot;
+p &quot;Full name: {fullName\}&quot;    // computed var
+div class={dynamicClass\} { \}
+</pre>
+</section>
+<section class="doc-section"><h2>Control flow
+</h2>
+<pre class="code-block">// @if / @else -- reactive condition
+@if count &gt; 0 {
+    p &quot;Positive&quot;
+\} @else {
+    p &quot;Zero or negative&quot;
+\}
+
+// @for -- reactive list render (full re-render on change)
+@for item in items {
+    li &quot;{item\}&quot;
+\}
+
+// @for with key -- key-based DOM diffing (v1.1.0)
+// Only modified nodes are patched; focus and animation are preserved
+@for post key=post.id in posts {
+    article &quot;{post.title\}&quot;
+\}
+
+// @error -- validation error block
+@error &quot;email&quot; {
+    span class=&quot;error&quot; &quot;Invalid email&quot;
+\}
+</pre>
+<p>With 
+<code>key=expr
+</code>
+ the runtime compares keys before patching. 
+Added nodes are inserted, removed nodes are deleted, unchanged ones stay untouched.
+</p>
+</section>
+<section class="doc-section"><h2>Events
+</h2>
+<p>Use 
+<code>on:&lt;type&gt;={expr\}
+</code>
+ on any element. The expression runs when the event fires.
+</p>
+<pre class="code-block">button on:click={count += 1\}                    { &quot;+&quot; \}
+button on:click={count = max(0, count - 1)\}      { &quot;-&quot; \}
+button on:click={count = 0\}                      { &quot;Reset&quot; \}
+input  on:input={name = event.target.value\}
+form   on:submit={handleSubmit\}
+
+// Navigation
+button on:click={webcore_navigate(&quot;/about&quot;)\} { &quot;Go&quot; \}
+
+// Inter-component events
+button on:click={emit(&quot;ping&quot;, count)\} { &quot;Ping&quot; \}
+</pre>
+</section>
+<section class="doc-section"><h2>Attributes
+</h2>
+<pre class="code-block">// Static string
+div class=&quot;container&quot; id=&quot;main&quot;
+
+// Boolean
+input disabled
+input required
+
+// Dynamic expression
+div class={dynamicClass\}
+input value={count\}
+
+// Validation
+input name=&quot;email&quot;
+      validate:required=&quot;Email is required&quot;
+      validate:email=&quot;Invalid address&quot;
+</pre>
+</section>
+<section class="doc-section"><h2>Navigation
+</h2>
+<pre class="code-block">// Declarative link (SPA-aware)
+link to=&quot;/about&quot; { &quot;About&quot; \}
+
+// Programmatic
+button on:click={webcore_navigate(&quot;/about&quot;)\} { &quot;Go&quot; \}
+button on:click={webcore_navigate(root)\}      { &quot;Home&quot; \}
+</pre>
+<p>Navigation uses 
+<code>history.pushState
+</code>
+ + fetch — no full page reload. 
+<code>on:destroy
+</code>
+ hooks run automatically before each navigation.
+</p>
+</section>
+<section class="doc-section"><h2>Parameterized routes (v1.1.0)
+</h2>
+<p>Route segments prefixed with 
+<code>:
+</code>
+ capture dynamic values. Access them in views with 
+<code><span data-webcore-interpolation="$route.paramName"></span>
+</code>
+.
+</p>
+<pre class="code-block">// src/app.webc
+app MyApp {
+    routes {
+        &quot;/&quot;:           HomePage
+        &quot;/post/:slug&quot;: PostPage
+        &quot;/user/:id&quot;:   UserPage
+    \}
+\}
+
+// src/pages/post.webc
+page &quot;post&quot; {
+    h1 &quot;Article: {$route.slug\}&quot;
+    p  &quot;Reading post ID: {$route.slug\}&quot;
+\}
+
+// Navigation to a parameterized route
+link to=&quot;/post/hello-world&quot; { &quot;Hello World&quot; \}
+button on:click={webcore_navigate(&quot;/user/&quot; + userId)\} { &quot;Profile&quot; \}
+</pre>
+<p>The compiler generates a 
+<code>ROUTES[]
+</code>
+ array with RegExp patterns. 
+<code>ROUTE_PARAMS
+</code>
+ is updated on every navigation and at page load. 
+Both arrays are tree-shaken when no parameterized routes are declared.
+</p>
+</section>
+</main>
+<footer class="site-footer"><p>Built with 
+<strong>WebCore
+</strong>
+ — a declarative language compiled with Rust.
+</p>
+</footer>
+</div>
+  <script src="webcore.js?v=1407e1df"></script>
+</body>
+</html>
